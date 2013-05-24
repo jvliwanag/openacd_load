@@ -1,0 +1,45 @@
+# openacd test generator config
+# copy this example to config.properties
+
+# sip
+sip.domain = oacdlt.3zuce.com
+sip.outbound_proxy = 
+sip.local_inet_address =
+sip.public_inet_address =
+
+# lines (comma separated)
+lines = 701,702
+
+# agent extensions
+agent.ext.start = 1100
+agent.ext.end = 1200
+
+# agent sip password
+agent.password = 1234
+
+# caller extensions
+caller.ext.start = 1090
+caller.ext.end = 1099
+
+# caller sip password
+caller.password = 1234
+
+# ms delay before an agent picks up a ringing call
+agent.ans.min = 500
+agent.ans.max = 1000
+
+# ms delay into the call before an agent initiates the hangup
+# (only applies when the caller hasn't hang up yet)
+agent.call.min = 3000
+agent.call.max = 10000
+
+# ms into the call when the caller initiates the hangup
+# this is inclusive of the wait time and actual
+# conversation with the agent
+caller.call.min = 10000
+caller.call.max = 20000
+
+# ms delay before a caller goes into another call
+# after the previous one is complete
+caller.idle.min = 1000
+caller.idle.max = 2000
