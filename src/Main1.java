@@ -1,108 +1,99 @@
-import java.io.FileInputStream;
 import java.net.InetAddress;
-import java.net.SocketException;
+import java.net.URI;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
-import net.sourceforge.peers.Config;
 import net.sourceforge.peers.JavaConfig;
 import net.sourceforge.peers.Logger;
-import net.sourceforge.peers.sip.syntaxencoding.SipURI;
-import net.sourceforge.peers.sip.syntaxencoding.SipUriSyntaxException;
+import net.sourceforge.peers.media.MediaMode;
+
+import com.ezuce.oacdlt.AgentManager;
+import com.ezuce.oacdlt.AgentWebConnectionFactory;
+import com.ezuce.oacdlt.CallerManager;
+import com.ezuce.oacdlt.PhoneFactory;
+import com.ezuce.oacdlt.SupervisorManager;
 
 public class Main1 {
-	public static void main(String[] args) throws Exception {
-		Properties p = new Properties();
-		p.load(new FileInputStream("config.properties"));
+	public static void main(String... args) throws Exception {
 
-		TestConfig testConfig = TestConfig.fromProperties(p);
+		URI loginURI = URI.create("http://oacddev.ezuce.com:8936/login");
+		URI conURI = URI.create("ws://oacddev.ezuce.com:8936/wsock");
 
-		ScheduledExecutorService exec = Executors.newScheduledThreadPool(10);
 		Logger logger = new Logger(null);
 
-		Config baseConfig = new JavaConfig();
-		baseConfig.setDomain(testConfig.getDomain());
+		String password = "password";
+		String sipPassword = "1234";
+		String sipDomain = "oacddev.ezuce.com";
 
-		if (testConfig.getOutboundProxy() != null)
-			baseConfig.setOutboundProxy(new SipURI("sip:" + testConfig
-					.getOutboundProxy()));
+		// caller settings
+		int callerFrom = 1002;
+		int callerTo = 1002;
 
-		if (testConfig.getLocalInetAddress() != null) {
-			baseConfig.setLocalInetAddress(InetAddress.getByName(testConfig
-					.getLocalInetAddress()));
-		} else {
-			baseConfig.setLocalInetAddress(InetAddress.getLocalHost());
-		}
+		int idleMinMs = 2000;
+		int idleMaxMs = 5000;
+		int callMinMs = 5000;
+		int callMaxMs = 8000;
 
-		if (testConfig.getPublicInetAddress() != null) {
-			baseConfig.setPublicInetAddress(InetAddress.getByName(testConfig
-					.getPublicInetAddress()));
-		} else {
-			baseConfig.setPublicInetAddress(baseConfig.getLocalInetAddress());
-		}
+		ArrayList<String> lines = new ArrayList<>();
+		lines.add("90");
 
-		initCallers(exec, logger, baseConfig, testConfig);
-		initAgents(exec, logger, baseConfig, testConfig);
+		String inetAddress = "10.24.7.1";
+
+		// agent settings
+		int agentFrom = 1005;
+		int agentTo = 1009;
+
+		int ringMinMs = 1000;
+		int ringMaxMs = 5000;
+		int agentCallMinMs = 2000;
+		int agentCallMaxMs = 10000;
+
+		// supervisor settings
+		int supervisorFrom = 1003;
+		int supervisorTo = 1004;
+
+		// sip config
+
+		JavaConfig baseConfig = new JavaConfig();
+		baseConfig.setLocalInetAddress(InetAddress.getByName(inetAddress));
+		// baseConfig.setLocalInetAddress(InetAddress.getLocalHost())
+		baseConfig.setDomain(sipDomain);
+		baseConfig.setMediaMode(MediaMode.none);
+
+		// phone factory
+		PhoneFactory phoneF = new PhoneFactory(baseConfig, logger);
+		//
+		// // caller manager
+		CallerManager callerM = new CallerManager(callerFrom, callerTo,
+				sipPassword, idleMinMs, idleMaxMs, callMinMs, callMaxMs, lines,
+				phoneF);
+
+		callerM.register();
+		callerM.startCalls();
+
+		// conn factory
+		AgentWebConnectionFactory connF = new AgentWebConnectionFactory(
+				loginURI, conURI);
+
+		// agent Manager
+		AgentManager agentM = new AgentManager(agentFrom, agentTo, password,
+				sipPassword, ringMinMs, ringMaxMs, agentCallMinMs,
+				agentCallMaxMs, connF, phoneF);
+
+		// supervisor Manager
+		SupervisorManager supervisorM = new SupervisorManager(supervisorFrom,
+				supervisorTo, password, sipPassword, connF, phoneF);
+
+		callerM.register();
+		agentM.start();
+		supervisorM.start();
+
+		callerM.startCalls();
+
+		// Phone p = phoneF.createPhone("1095", "1234", new
+		// DummyPhoneListener());
+		// p.register();
+		// p.reset();
+		// Thread.sleep(5000);
+		// System.out.println("ok");
 	}
-
-	private static List<FkCaller> initCallers(ScheduledExecutorService exec,
-			Logger logger, Config baseConfig, TestConfig testConfig)
-			throws SocketException {
-		int extStart = testConfig.getCallerExtStart();
-		int extEnd = testConfig.getCallerExtEnd();
-
-		String pwd = testConfig.getCallerPwd();
-
-		int idleMin = testConfig.getCallerIdleMin();
-		int idleMax = testConfig.getCallerIdleMax();
-
-		int callMin = testConfig.getCallerCallMin();
-		int callMax = testConfig.getCallerCallMax();
-
-		String[] lines = testConfig.getLines();
-
-		List<FkCaller> callers = new ArrayList<FkCaller>(extEnd - extStart + 1);
-		for (int i = extStart; i <= extEnd; i++) {
-			String username = Integer.toString(i);
-			FkCaller caller = new FkCaller(baseConfig, username, pwd, idleMin,
-					idleMax, callMin, callMax, lines, exec, logger);
-			callers.add(caller);
-
-			caller.startCalling();
-		}
-
-		return callers;
-	}
-
-	private static List<FkAgent> initAgents(ScheduledExecutorService exec,
-			Logger logger, Config baseConfig, TestConfig testConfig)
-			throws SocketException, SipUriSyntaxException {
-
-		int extStart = testConfig.getAgentExtStart();
-		int extEnd = testConfig.getAgentExtEnd();
-
-		String pwd = testConfig.getAgentPassword();
-
-		int ansMin = testConfig.getAgentAnsMin();
-		int ansMax = testConfig.getAgentAnsMax();
-
-		int callMin = testConfig.getAgentCallMin();
-		int callMax = testConfig.getAgentCallMax();
-
-		List<FkAgent> agents = new ArrayList<FkAgent>(extEnd - extStart + 1);
-		for (int i = extStart; i <= extEnd; i++) {
-			String username = Integer.toString(i);
-			FkAgent agent = new FkAgent(baseConfig, username, pwd, ansMin,
-					ansMax, callMin, callMax, exec, logger);
-			// agent.logOut();
-			agent.logIn();
-			agents.add(agent);
-		}
-
-		return agents;
-	}
-
 }
