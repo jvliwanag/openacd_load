@@ -56,6 +56,7 @@ public class AgentWebConnection extends BaseAgentConnection {
 			tryLogin(http);
 
 			wsock = new WebSocketClient();
+			wsock.getPolicy().setMaxMessageSize(262144);
 			wsock.setCookieStore(http.getCookieStore());
 
 			wsock.start();
