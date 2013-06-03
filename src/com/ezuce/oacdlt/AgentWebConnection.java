@@ -18,9 +18,8 @@ import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
-@WebSocket
+@WebSocket(maxMessageSize=262144)
 public class AgentWebConnection extends BaseAgentConnection {
 	private URI loginURI;
 	private URI conURI;
