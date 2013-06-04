@@ -30,6 +30,7 @@ public class PhoneFactory {
 		config.setPublicInetAddress(baseConfig.getPublicInetAddress());
 		config.setOutboundProxy(baseConfig.getOutboundProxy());
 		config.setMediaMode(baseConfig.getMediaMode());
+		config.setMediaFile(baseConfig.getMediaFile());
 
 		// specific to user
 		config.setUserPart(username);
