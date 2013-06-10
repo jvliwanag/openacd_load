@@ -1,28 +1,35 @@
 # openacd test generator config
-# copy this example to config.properties
+
+# web
+web.login_uri = http://oacdlt.3zuce.com/openacd/login
+web.wsock_uri = ws://oacdlt.3zuce.com:8936/wsock
 
 # sip
 sip.domain = oacdlt.3zuce.com
 sip.outbound_proxy = 
 sip.local_inet_address =
 sip.public_inet_address =
+sip.playback_file =
 
 # lines (comma separated)
-lines = 701,702
+lines = 90
 
 # agent extensions
-agent.ext.start = 1100
-agent.ext.end = 1200
+agent.ext.start = 1001
+agent.ext.end = 1001
+agent.password = password
+agent.sip_password = 1234
 
-# agent sip password
-agent.password = 1234
+# supervisor extensions
+supervisor.ext.start = 1002
+supervisor.ext.end = 1002
+supervisor.password = password
+supervisor.sip_password = 1234
 
 # caller extensions
-caller.ext.start = 1090
+caller.ext.start = 1099
 caller.ext.end = 1099
-
-# caller sip password
-caller.password = 1234
+caller.sip_password = 1234
 
 # ms delay before an agent picks up a ringing call
 agent.ans.min = 500
