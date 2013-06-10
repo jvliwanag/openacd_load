@@ -61,7 +61,7 @@ public class Phone {
 			ua.getUac().register();
 			completed = registerLatch.await(5, TimeUnit.SECONDS);
 		} catch (Exception e) {
-			rethrow("register fail");
+			rethrow("register fail", e);
 		}
 
 		if (completed) {
@@ -204,7 +204,7 @@ public class Phone {
 		public void registerFailed(SipResponse sipResponse) {
 			registerSuccess = false;
 			registerLatch.countDown();
-			LOG.debug("register fail");
+			LOG.debug("register fail -- " + sipResponse.getReasonPhrase());
 		}
 
 		@Override

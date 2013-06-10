@@ -119,14 +119,12 @@ public class AgentWebConnection extends BaseAgentConnection {
 				URLEncoder.encode(username, "utf8"),
 				URLEncoder.encode(password, "utf8"));
 
-		System.out.println("body: " + body);
 		ContentResponse resp = http.POST(loginURI)
 				.header("Content-Type", "application/x-www-form-urlencoded ")
 				.content(new StringContentProvider(body)).send();
 
 		if (resp.getStatus() == HttpStatus.UNAUTHORIZED_401)
 			throw new AgentConnectionException("Unauthorized");
-
 	}
 
 	private void connectWSock(WebSocketClient wsock) throws Exception {

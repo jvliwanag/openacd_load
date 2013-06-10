@@ -46,7 +46,6 @@ public class SupervisorManager {
 			String username = Integer.toString(i);
 			Phone p = phoneFactory.createPhone(username, sipPassword,
 					phoneListener);
-
 			AgentConnection conn = connFactory.createConnection(username,
 					password, p, connListener);
 
