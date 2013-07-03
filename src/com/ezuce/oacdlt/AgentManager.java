@@ -10,12 +10,13 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import net.sourceforge.peers.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.sourceforge.peers.sip.transport.SipResponse;
 
 public class AgentManager {
-	private static Logger LOG = OACommon.LOG;
-	
+	private Logger logger = LoggerFactory.getLogger(AgentManager.class);
 	private List<AgentConnection> agents;
 
 	private int ringMinMs;
@@ -209,7 +210,7 @@ public class AgentManager {
 		String msg = String.format(fmt, args);
 		
 		String l = "[a " + user + "] - " + msg;
-		LOG.info(l);
+		logger.info(l);
 		System.out.println(l);
 	}
 }

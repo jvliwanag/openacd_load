@@ -10,11 +10,13 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import net.sourceforge.peers.Logger;
 import net.sourceforge.peers.sip.transport.SipResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class CallerManager {
-	private static Logger LOG = OACommon.LOG;
+	private Logger logger = LoggerFactory.getLogger(AgentManager.class);
 
 	private List<Phone> phones;
 
@@ -131,8 +133,7 @@ public class CallerManager {
 		
 		String l = "[c " + user + "] - " + msg; 
 		
-		LOG.info(l);
-		System.out.println(l);
+		logger.info(l);
 	}
 
 	class CallerListener implements PhoneListener {

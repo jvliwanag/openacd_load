@@ -4,13 +4,13 @@ import java.net.URI;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-public class AgentWebConnectionFactory implements AgentConnectionFactory {
+public class AgentWsockConnectionFactory implements AgentConnectionFactory {
 	private URI loginURI;
 	private URI conURI;
 
 	private ScheduledExecutorService exec;
 
-	public AgentWebConnectionFactory(URI loginURI, URI conURI) {
+	public AgentWsockConnectionFactory(URI loginURI, URI conURI) {
 		this.loginURI = loginURI;
 		this.conURI = conURI;
 
@@ -20,7 +20,7 @@ public class AgentWebConnectionFactory implements AgentConnectionFactory {
 	@Override
 	public AgentConnection createConnection(String username, String password,
 			Phone phone, AgentConnectionListener listener) {
-		return new AgentWebConnection(username, password, listener, phone,
+		return new AgentWsockConnection(username, password, listener, phone,
 				loginURI, conURI, exec);
 	}
 }

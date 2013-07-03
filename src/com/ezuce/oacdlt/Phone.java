@@ -4,8 +4,9 @@ import java.net.SocketException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import lombok.Synchronized;
+
 import net.sourceforge.peers.Config;
-import net.sourceforge.peers.Logger;
 import net.sourceforge.peers.sip.core.useragent.SipListener;
 import net.sourceforge.peers.sip.core.useragent.UserAgent;
 import net.sourceforge.peers.sip.syntaxencoding.SipUriSyntaxException;
@@ -13,8 +14,11 @@ import net.sourceforge.peers.sip.transactionuser.Dialog;
 import net.sourceforge.peers.sip.transport.SipRequest;
 import net.sourceforge.peers.sip.transport.SipResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class Phone {
-	private static Logger LOG = OACommon.LOG;
+	private Logger logger = LoggerFactory.getLogger(Phone.class);
 
 	private UserAgent ua;
 
@@ -35,22 +39,20 @@ public class Phone {
 
 	private Dialog dialog;
 	private SipRequest activeCallReq;
-	
-	private Logger logger;
 
-	public Phone(Config config, Logger logger, PhoneListener listener) {
+	public Phone(Config config, PhoneListener listener) {
 		this.config = config;
 		this.listener = listener;
 		this.phone = this;
-		this.logger = logger;
 
 		try {
-			ua = new UserAgent(new PhoneSipListener(), config, logger);
+			ua = new UserAgent(new PhoneSipListener(), config);
 		} catch (SocketException e) {
 			rethrow("failed to create phone", e);
 		}
 	}
 
+	@Synchronized
 	public void register() {
 		registerSuccess = false;
 		registerLatch = new CountDownLatch(1);
@@ -73,6 +75,7 @@ public class Phone {
 		}
 	}
 
+	@Synchronized
 	public void unregister() {
 		try {
 			ua.getUac().unregister();
@@ -81,27 +84,29 @@ public class Phone {
 		}
 	}
 
+	@Synchronized
 	public void reset() {
 		try {
-//			unregister();
+			// unregister();
 			ua.close();
-		} catch(Exception ex) {
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		
+
 		registerLatch = null;
 		ringLatch = null;
 		dialog = null;
 		activeCallReq = null;
-		
+
 		try {
-			ua = new UserAgent(new PhoneSipListener(), config, logger);
+			ua = new UserAgent(new PhoneSipListener(), config);
 			register();
 		} catch (Exception e) {
 			throw new PhoneException("reset fail", e);
 		}
 	}
-	
+
+	@Synchronized
 	public void answer() {
 		if (dialog == null || activeCallReq == null)
 			throw new PhoneException("no call to answer");
@@ -111,11 +116,13 @@ public class Phone {
 		dialog = null;
 	}
 
+	@Synchronized
 	public void dial(String extension) {
 		String sipAddr = "sip:" + extension + "@" + config.getDomain();
 		dialSip(sipAddr);
 	}
 
+	@Synchronized
 	public void dialSip(String sipAddr) {
 		if (activeCallReq != null)
 			throw new PhoneException("busy with another call");
@@ -147,6 +154,7 @@ public class Phone {
 		}
 	}
 
+	@Synchronized
 	public void hangUp() {
 		if (activeCallReq != null) {
 			if (isIncomingRing) {
@@ -157,18 +165,20 @@ public class Phone {
 
 			activeCallReq = null;
 		} else {
-			rethrow("hangup on no active call");
+			// TODO must throw error
+			// rethrow("hangup on no active call");
+			logger.warn("Hangup called when no current call is present");
 		}
 	}
 
 	private void rethrow(String msg) {
-		LOG.error(msg);
+		logger.error(msg);
 		System.out.println("error -- " + msg);
 		throw new PhoneException(msg);
 	}
 
 	private void rethrow(String msg, Exception ex) {
-		LOG.error(msg, ex);
+		logger.error(msg, ex);
 		ex.printStackTrace();
 		throw new PhoneException(msg, ex);
 	}
@@ -197,14 +207,17 @@ public class Phone {
 		public void registerSuccessful(SipResponse sipResponse) {
 			registerSuccess = true;
 			registerLatch.countDown();
-			LOG.debug("register ok");
+			logger.debug("register ok");
 		}
 
 		@Override
 		public void registerFailed(SipResponse sipResponse) {
 			registerSuccess = false;
 			registerLatch.countDown();
-			LOG.debug("register fail -- " + sipResponse.getReasonPhrase());
+			if (sipResponse != null) {
+				logger.debug("register fail -- {}",
+						sipResponse.getReasonPhrase());
+			}
 		}
 
 		@Override
@@ -246,16 +259,21 @@ public class Phone {
 
 		@Override
 		public void error(SipResponse sipResponse) {
-			LOG.error("error sip!");
+			logger.error("error sip!");
 			System.out.println("error sip -- " + sipResponse.getReasonPhrase());
-			
+
 			if (ringLatch != null) {
 				ringLatch.countDown();
 			}
-			
+
 			listener.onError(phone, sipResponse);
 			activeCallReq = null;
 		}
+	}
+
+	@Synchronized
+	public void close() {
+		this.ua.close();
 	}
 }
 

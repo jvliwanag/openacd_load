@@ -6,7 +6,6 @@ import java.util.List;
 
 import net.sourceforge.peers.Config;
 import net.sourceforge.peers.JavaConfig;
-import net.sourceforge.peers.Logger;
 import net.sourceforge.peers.media.MediaMode;
 import net.sourceforge.peers.sip.syntaxencoding.SipURI;
 import net.sourceforge.peers.sip.syntaxencoding.SipUriSyntaxException;
@@ -16,7 +15,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 
 import com.ezuce.oacdlt.AgentConnectionFactory;
 import com.ezuce.oacdlt.AgentManager;
-import com.ezuce.oacdlt.AgentWebConnectionFactory;
+import com.ezuce.oacdlt.AgentWsockConnectionFactory;
 import com.ezuce.oacdlt.CallerManager;
 import com.ezuce.oacdlt.PhoneFactory;
 import com.ezuce.oacdlt.SupervisorManager;
@@ -26,13 +25,11 @@ public class Main1 {
 
 		Configuration config = new PropertiesConfiguration("config.properties");
 
-		Logger logger = new Logger(null);
-
 		// sip
 		Config baseConfig = getSipConfig(config);
 
 		// phone factory
-		PhoneFactory phoneF = new PhoneFactory(baseConfig, logger);
+		PhoneFactory phoneF = new PhoneFactory(baseConfig);
 
 		// caller settings
 		CallerManager callerM = getCallerManager(config, phoneF);
@@ -96,7 +93,7 @@ public class Main1 {
 		URI conURI = URI.create(config.getString("web.wsock_uri"));
 
 		// conn factory
-		AgentWebConnectionFactory connF = new AgentWebConnectionFactory(
+		AgentWsockConnectionFactory connF = new AgentWsockConnectionFactory(
 				loginURI, conURI);
 		return connF;
 	}
